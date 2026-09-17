@@ -796,13 +796,16 @@ html:not([data-theme="dark"]) .theme-toggle .theme-icon-moon { display: inline-f
   max-width: none;
   padding-left: 1.25rem;
   padding-right: 1.25rem;
+  padding-bottom: 1.75rem;
 }
 .task-board {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  overflow-x: auto;
+  overflow: auto;
+  max-height: calc(100vh - var(--chrome-h) - 10.5rem);
   padding-bottom: 0.5rem;
+  overscroll-behavior: contain;
 }
 .task-board-header,
 .task-board-row {
@@ -812,18 +815,89 @@ html:not([data-theme="dark"]) .theme-toggle .theme-icon-moon { display: inline-f
   min-width: 56rem;
   align-items: stretch;
 }
+.task-board-header {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  padding: 0.15rem 0 0.55rem;
+  margin: 0;
+  background: linear-gradient(
+    180deg,
+    var(--paper) 0%,
+    color-mix(in srgb, var(--paper) 92%, transparent) 72%,
+    color-mix(in srgb, var(--paper) 55%, transparent) 100%
+  );
+  backdrop-filter: blur(10px);
+}
 .task-board-corner,
 .task-board-colhead {
-  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.55rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
   font-family: var(--mono);
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
-  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
-.task-board-colhead.status-doing { color: var(--moss); }
-.task-board-colhead.status-blocked { color: var(--terracotta); }
-.task-board-colhead.status-done { color: var(--dusty-blue); }
+.task-board-corner {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--cream) 88%, var(--paper));
+  border-color: var(--border-soft);
+  box-shadow: none;
+}
+.task-board-colhead.status-todo {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--cream) 92%, #fff);
+  border-color: color-mix(in srgb, var(--border) 90%, var(--ink));
+}
+.task-board-colhead.status-doing {
+  color: var(--moss-deep);
+  background: color-mix(in srgb, var(--moss) 18%, var(--cream));
+  border-color: color-mix(in srgb, var(--moss) 35%, var(--border));
+}
+.task-board-colhead.status-blocked {
+  color: color-mix(in srgb, var(--terracotta) 72%, var(--ink));
+  background: color-mix(in srgb, var(--terracotta) 16%, var(--cream));
+  border-color: color-mix(in srgb, var(--terracotta) 40%, var(--border));
+}
+.task-board-colhead.status-done {
+  color: color-mix(in srgb, var(--dusty-blue) 80%, var(--ink));
+  background: color-mix(in srgb, var(--dusty-blue) 16%, var(--cream));
+  border-color: color-mix(in srgb, var(--dusty-blue) 38%, var(--border));
+}
+.colhead-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 99px;
+  flex: none;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent);
+}
+.task-board-colhead.status-todo .colhead-dot { background: var(--muted); box-shadow: 0 0 0 3px color-mix(in srgb, var(--muted) 18%, transparent); }
+.task-board-colhead.status-doing .colhead-dot { background: var(--moss); }
+.task-board-colhead.status-blocked .colhead-dot { background: var(--terracotta); }
+.task-board-colhead.status-done .colhead-dot { background: var(--dusty-blue); }
+.colhead-label { flex: 1; min-width: 0; line-height: 1.1; }
+.colhead-count {
+  flex: none;
+  min-width: 1.4rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: inherit;
+}
 .task-board-ws {
   display: flex;
   align-items: flex-start;
@@ -1198,6 +1272,7 @@ video.media-player { max-height: 420px; }
   .split-2, .stat-row, .auth-split { grid-template-columns: 1fr; }
   .top-search kbd { display: none; }
   .content { padding: 1.25rem 1.1rem 6rem; }
+  .task-board { max-height: calc(100vh - var(--chrome-h) - 13.5rem); }
   .mobile-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
     background: color-mix(in srgb, var(--cream) 92%, transparent);

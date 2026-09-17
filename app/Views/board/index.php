@@ -20,7 +20,15 @@
         <p class="muted">Create a workspace to start placing tasks on the board.</p>
         <p style="margin-top:1rem"><a class="btn btn-primary" href="<?= e(url('/workspaces/create')) ?>">+ Workspace</a></p>
     </div>
-<?php else: ?>
+<?php else:
+    $colCounts = [];
+    foreach ($columns as $col) {
+        $colCounts[$col] = 0;
+        foreach ($grid as $wsGrid) {
+            $colCounts[$col] += count($wsGrid[$col] ?? []);
+        }
+    }
+?>
 <div
     class="task-board"
     data-board
@@ -28,9 +36,15 @@
     data-csrf="<?= e(csrf_token()) ?>"
 >
     <div class="task-board-header">
-        <div class="task-board-corner">Workspace</div>
+        <div class="task-board-corner">
+            <span class="colhead-label">Workspace</span>
+        </div>
         <?php foreach ($columns as $col): ?>
-            <div class="task-board-colhead status-<?= e($col) ?>"><?= e($columnLabels[$col] ?? $col) ?></div>
+            <div class="task-board-colhead status-<?= e($col) ?>">
+                <span class="colhead-dot" aria-hidden="true"></span>
+                <span class="colhead-label"><?= e($columnLabels[$col] ?? $col) ?></span>
+                <span class="colhead-count"><?= (int) $colCounts[$col] ?></span>
+            </div>
         <?php endforeach; ?>
     </div>
 

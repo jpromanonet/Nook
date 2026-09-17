@@ -71,12 +71,20 @@ $userName = Auth::check() ? (string) ($user['name'] ?? '') : '';
                 <span>Workspaces</span>
                 <a href="<?= e(url('/workspaces/create')) ?>" title="New workspace"><?= icon('plus', 14) ?></a>
             </div>
-            <nav class="workspace-list">
+            <nav
+                class="workspace-list"
+                data-ws-sortable
+                data-reorder-url="<?= e(url('/workspaces/reorder')) ?>"
+                data-csrf="<?= e(csrf_token()) ?>"
+            >
                 <?php foreach ($workspacesNav as $ws): ?>
-                    <a class="<?= e(nav_active('/workspaces/' . $ws['id'])) ?>" href="<?= e(url('/workspaces/' . $ws['id'])) ?>">
-                        <span class="dot" style="background:<?= e($ws['color']) ?>"></span>
-                        <span class="ws-name"><?= e($ws['name']) ?></span>
-                    </a>
+                    <div class="ws-row" draggable="true" data-id="<?= (int) $ws['id'] ?>">
+                        <button type="button" class="ws-drag" aria-label="Drag to reorder" title="Drag">⋮⋮</button>
+                        <a class="<?= e(nav_active('/workspaces/' . $ws['id'])) ?>" href="<?= e(url('/workspaces/' . $ws['id'])) ?>">
+                            <span class="dot" style="background:<?= e($ws['color']) ?>"></span>
+                            <span class="ws-name"><?= e($ws['name']) ?></span>
+                        </a>
+                    </div>
                 <?php endforeach; ?>
                 <?php if (!$workspacesNav): ?>
                     <p class="muted tiny">No workspaces yet.</p>

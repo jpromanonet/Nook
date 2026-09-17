@@ -448,6 +448,79 @@
     });
   }
 
+  function initWorkspaceSort() {
+    var list = $('[data-ws-sortable]');
+    if (!list) return;
+    var reorderUrl = list.getAttribute('data-reorder-url');
+    var csrf = list.getAttribute('data-csrf') || '';
+    var dragEl = null;
+
+    function rows() {
+      return $$('.ws-row[data-id]', list);
+    }
+
+    function clearMarks() {
+      rows().forEach(function (el) {
+        el.classList.remove('is-dragging', 'drop-before', 'drop-after');
+      });
+    }
+
+    function saveOrder() {
+      var body = new URLSearchParams();
+      body.set('_csrf', csrf);
+      rows().forEach(function (el) {
+        body.append('ids[]', el.getAttribute('data-id'));
+      });
+      return fetch(reorderUrl, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+        body: body,
+        credentials: 'same-origin'
+      }).then(function (res) { return res.json().catch(function () { return { ok: false }; }); });
+    }
+
+    list.addEventListener('dragstart', function (ev) {
+      var row = ev.target && ev.target.closest ? ev.target.closest('.ws-row[data-id]') : null;
+      if (!row || !list.contains(row)) return;
+      if (ev.target.closest && ev.target.closest('a') && !ev.target.closest('.ws-drag')) {
+        // allow dragging from handle or row chrome
+      }
+      dragEl = row;
+      row.classList.add('is-dragging');
+      try {
+        ev.dataTransfer.effectAllowed = 'move';
+        ev.dataTransfer.setData('text/plain', row.getAttribute('data-id') || '');
+      } catch (e) {}
+    });
+
+    list.addEventListener('dragend', function () {
+      clearMarks();
+      dragEl = null;
+    });
+
+    list.addEventListener('dragover', function (ev) {
+      if (!dragEl) return;
+      ev.preventDefault();
+      var over = ev.target && ev.target.closest ? ev.target.closest('.ws-row[data-id]') : null;
+      clearMarks();
+      dragEl.classList.add('is-dragging');
+      if (!over || over === dragEl || !list.contains(over)) return;
+      var rect = over.getBoundingClientRect();
+      var before = (ev.clientY - rect.top) < rect.height / 2;
+      over.classList.add(before ? 'drop-before' : 'drop-after');
+      if (before) list.insertBefore(dragEl, over);
+      else list.insertBefore(dragEl, over.nextSibling);
+    });
+
+    list.addEventListener('drop', function (ev) {
+      ev.preventDefault();
+      if (!dragEl) return;
+      clearMarks();
+      saveOrder();
+      dragEl = null;
+    });
+  }
+
   initSidebar();
   initThemeToggle();
   initQuickAdd();
@@ -456,4 +529,5 @@
   initBack();
   initChunkUploads();
   initBoard();
+  initWorkspaceSort();
 })();

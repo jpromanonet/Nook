@@ -36,6 +36,21 @@ final class WorkspaceController
         }
     }
 
+    public static function reorder(): void
+    {
+        Auth::requireLogin();
+        require_csrf();
+        $ids = $_POST['ids'] ?? [];
+        if (!is_array($ids)) {
+            $ids = array_filter(array_map('trim', explode(',', (string) $ids)));
+        }
+        WorkspaceService::reorder($ids);
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+            json_response(['ok' => true]);
+        }
+        redirect('/home');
+    }
+
     public static function show(string $id): void
     {
         Auth::requireLogin();

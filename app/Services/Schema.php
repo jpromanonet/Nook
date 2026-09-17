@@ -37,5 +37,11 @@ final class Schema
             $pdo->exec('ALTER TABLE items ADD COLUMN sort_order INT NOT NULL DEFAULT 0 AFTER is_pinned');
             $pdo->exec('UPDATE items SET sort_order = id WHERE sort_order = 0');
         }
+
+        $wsSort = $pdo->query("SHOW COLUMNS FROM workspaces LIKE 'sort_order'")->fetch();
+        if (!$wsSort) {
+            $pdo->exec('ALTER TABLE workspaces ADD COLUMN sort_order INT NOT NULL DEFAULT 0 AFTER end_date');
+            $pdo->exec('UPDATE workspaces SET sort_order = id WHERE sort_order = 0');
+        }
     }
 }

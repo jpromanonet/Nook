@@ -54,6 +54,7 @@ $router->post('/settings/sessions/{id}/revoke', [SettingsController::class, 'rev
 $router->get('/workspaces', [WorkspaceController::class, 'index']);
 $router->get('/workspaces/create', [WorkspaceController::class, 'create']);
 $router->post('/workspaces', [WorkspaceController::class, 'store']);
+$router->post('/workspaces/reorder', [WorkspaceController::class, 'reorder']);
 $router->get('/workspaces/{id}', [WorkspaceController::class, 'show']);
 $router->get('/workspaces/{id}/edit', [WorkspaceController::class, 'edit']);
 $router->post('/workspaces/{id}', [WorkspaceController::class, 'update']);

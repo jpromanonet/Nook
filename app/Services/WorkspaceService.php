@@ -10,10 +10,40 @@ final class WorkspaceService
         if (!$includeArchived) {
             $sql .= " AND status <> 'archived' AND archived_at IS NULL";
         }
-        $sql .= ' ORDER BY name';
+        $sql .= ' ORDER BY sort_order ASC, name ASC';
         $stmt = Database::pdo()->prepare($sql);
         $stmt->execute(['uid' => Auth::id()]);
         return $stmt->fetchAll() ?: [];
+    }
+
+    public static function nextSortOrder(): int
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT COALESCE(MAX(sort_order), 0) + 10 FROM workspaces WHERE user_id = :uid'
+        );
+        $stmt->execute(['uid' => Auth::id()]);
+        return (int) ($stmt->fetchColumn() ?: 10);
+    }
+
+    public static function reorder(array $orderedIds): void
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'UPDATE workspaces SET sort_order = :ord WHERE id = :id AND user_id = :uid'
+        );
+        $ord = 10;
+        foreach ($orderedIds as $id) {
+            $id = (int) $id;
+            if ($id <= 0) {
+                continue;
+            }
+            $stmt->execute([
+                'ord' => $ord,
+                'id' => $id,
+                'uid' => Auth::id(),
+            ]);
+            $ord += 10;
+        }
     }
 
     public static function find(int $id): ?array
@@ -58,9 +88,9 @@ final class WorkspaceService
 
         $stmt = Database::pdo()->prepare(
             'INSERT INTO workspaces
-                (user_id, name, description, type, status, color, icon, website, repository, notes, start_date, end_date)
+                (user_id, name, description, type, status, color, icon, website, repository, notes, start_date, end_date, sort_order)
              VALUES
-                (:uid, :name, :description, :type, :status, :color, :icon, :website, :repository, :notes, :start_date, :end_date)'
+                (:uid, :name, :description, :type, :status, :color, :icon, :website, :repository, :notes, :start_date, :end_date, :sort_order)'
         );
         $stmt->execute([
             'uid' => Auth::id(),
@@ -75,6 +105,7 @@ final class WorkspaceService
             'notes' => null_if_blank($data['notes'] ?? null),
             'start_date' => null_if_blank($data['start_date'] ?? null),
             'end_date' => null_if_blank($data['end_date'] ?? null),
+            'sort_order' => self::nextSortOrder(),
         ]);
         $id = (int) Database::pdo()->lastInsertId();
         ActivityService::log('workspace.created', 'Created workspace "' . $name . '"', $id);

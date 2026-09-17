@@ -30,13 +30,13 @@ require_once __DIR__ . '/Services/WorkspaceService.php';
 require_once __DIR__ . '/Services/ItemService.php';
 require_once __DIR__ . '/Services/DailyService.php';
 require_once __DIR__ . '/Services/SearchService.php';
+require_once __DIR__ . '/Services/MetricsService.php';
 
 foreach ([
     'HomeController',
     'AuthController',
     'OnboardingController',
     'TodayController',
-    'InboxController',
     'CalendarController',
     'SearchController',
     'SettingsController',
@@ -44,6 +44,9 @@ foreach ([
     'ItemController',
     'FileController',
     'FavoritesController',
+    'UploadController',
+    'BoardController',
+    'MetricsController',
 ] as $controller) {
     require_once __DIR__ . '/Controllers/' . $controller . '.php';
 }

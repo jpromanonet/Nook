@@ -5,7 +5,7 @@ $wid = $item['workspace_id'] ?? null;
 ?>
 <div class="page-head">
     <div>
-        <p class="eyebrow"><?= icon(item_type_icon($item['type'])) ?> <?= e(item_type_label($item['type'])) ?><?= !empty($item['workspace_name']) ? ' · ' . e($item['workspace_name']) : ' · Inbox' ?></p>
+        <p class="eyebrow"><?= icon(item_type_icon($item['type'])) ?> <?= e(item_type_label($item['type'])) ?><?= !empty($item['workspace_name']) ? ' · ' . e($item['workspace_name']) : '' ?></p>
         <h1><?= e($item['title']) ?></h1>
         <p class="muted tiny">Created <?= e(format_dt($item['created_at'])) ?> · Updated <?= e(format_dt($item['updated_at'])) ?></p>
     </div>
@@ -123,7 +123,7 @@ $wid = $item['workspace_id'] ?? null;
             <?php if ($wid): ?>
                 <p><a href="<?= e(url('/workspaces/' . $wid)) ?>"><?= e($item['workspace_name']) ?></a></p>
             <?php else: ?>
-                <p class="muted">Still in Inbox.</p>
+                <p class="muted">No workspace assigned.</p>
             <?php endif; ?>
             <?php if ($item['type'] === 'note'): ?>
                 <form method="post" action="<?= e(url('/items/' . $item['id'] . '/convert')) ?>" class="stack">

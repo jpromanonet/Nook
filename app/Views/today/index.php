@@ -22,7 +22,7 @@ $date = $snapshot['date'];
                         <span class="type-ico"><?= icon('task') ?></span>
                         <span>
                             <strong><?= e($item['title']) ?></strong>
-                            <span class="muted tiny"><?= e($item['workspace_name'] ?: 'Inbox') ?> · due <?= e(format_date($item['due_date'])) ?></span>
+                            <span class="muted tiny"><?= e($item['workspace_name'] ?: '—') ?> · due <?= e(format_date($item['due_date'])) ?></span>
                         </span>
                     </a>
                 </li>
@@ -51,24 +51,24 @@ $date = $snapshot['date'];
                 <span class="type-ico"><?= icon('task') ?></span>
                 <span>
                     <strong><?= e($item['title']) ?></strong>
-                    <span class="muted tiny"><?= e($item['workspace_name'] ?: 'Inbox') ?> · <?= e(task_statuses()[$item['status']] ?? $item['status']) ?></span>
+                    <span class="muted tiny"><?= e($item['workspace_name'] ?: '—') ?> · <?= e(task_statuses()[$item['status']] ?? $item['status']) ?></span>
                 </span>
             </a>
         <?php endforeach; ?>
     </section>
 
-    <section class="card">
+    <section class="card daily-plan">
         <h2>Daily plan</h2>
-        <form method="post" action="<?= e(url('/today')) ?>" class="stack">
+        <form method="post" action="<?= e(url('/today')) ?>" class="stack daily-plan-form">
             <?= csrf_field() ?>
             <input type="hidden" name="note_date" value="<?= e($date) ?>">
-            <label class="field"><span>Must do</span><textarea name="must_do" rows="3" placeholder="The few things that matter"><?= e($plan['must_do'] ?? '') ?></textarea></label>
-            <label class="field"><span>Should do</span><textarea name="should_do" rows="3"><?= e($plan['should_do'] ?? '') ?></textarea></label>
-            <label class="field"><span>If there’s time</span><textarea name="if_time" rows="2"><?= e($plan['if_time'] ?? '') ?></textarea></label>
-            <label class="field"><span>Notes</span><textarea name="notes" rows="3"><?= e($plan['notes'] ?? '') ?></textarea></label>
-            <label class="field"><span>Things learned</span><textarea name="learned" rows="2"><?= e($plan['learned'] ?? '') ?></textarea></label>
-            <label class="field"><span>Completed</span><textarea name="completed" rows="2"><?= e($plan['completed'] ?? '') ?></textarea></label>
-            <label class="field"><span>Moved to tomorrow</span><textarea name="moved_tomorrow" rows="2"><?= e($plan['moved_tomorrow'] ?? '') ?></textarea></label>
+            <label class="field"><span>Must do</span><textarea name="must_do" rows="2" placeholder="The few things that matter"><?= e($plan['must_do'] ?? '') ?></textarea></label>
+            <label class="field"><span>Should do</span><textarea name="should_do" rows="2"><?= e($plan['should_do'] ?? '') ?></textarea></label>
+            <label class="field"><span>If there’s time</span><textarea name="if_time" rows="1"><?= e($plan['if_time'] ?? '') ?></textarea></label>
+            <label class="field"><span>Notes</span><textarea name="notes" rows="2"><?= e($plan['notes'] ?? '') ?></textarea></label>
+            <label class="field"><span>Things learned</span><textarea name="learned" rows="1"><?= e($plan['learned'] ?? '') ?></textarea></label>
+            <label class="field"><span>Completed</span><textarea name="completed" rows="1"><?= e($plan['completed'] ?? '') ?></textarea></label>
+            <label class="field"><span>Moved to tomorrow</span><textarea name="moved_tomorrow" rows="1"><?= e($plan['moved_tomorrow'] ?? '') ?></textarea></label>
             <button class="btn btn-primary" type="submit">Save plan</button>
         </form>
     </section>

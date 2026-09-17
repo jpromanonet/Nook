@@ -42,5 +42,33 @@ $w = $workspace ?? [];
         <label class="field"><span>Repository</span><input type="url" name="repository" value="<?= e($w['repository'] ?? '') ?>"></label>
     </div>
     <label class="field"><span>Notes</span><textarea name="notes" rows="4"><?= e($w['notes'] ?? '') ?></textarea></label>
-    <button class="btn btn-primary" type="submit">Save</button>
+    <div class="row-actions">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <?php if ($workspace): ?>
+            <button
+                class="btn btn-secondary"
+                type="submit"
+                form="ws-archive-form"
+                onclick="return confirm('Archive this workspace?');"
+            >Archive</button>
+        <?php endif; ?>
+    </div>
 </form>
+
+<?php if ($workspace): ?>
+    <form id="ws-archive-form" method="post" action="<?= e(url('/workspaces/' . $workspace['id'] . '/archive')) ?>" hidden>
+        <?= csrf_field() ?>
+    </form>
+    <section class="card danger-zone" style="margin-top:1.25rem">
+        <h2>Delete workspace</h2>
+        <p class="muted">This permanently removes the workspace and its items. There is no undo.</p>
+        <form
+            method="post"
+            action="<?= e(url('/workspaces/' . $workspace['id'] . '/delete')) ?>"
+            onsubmit="return confirm('Delete this workspace and all of its content permanently?');"
+        >
+            <?= csrf_field() ?>
+            <button class="btn btn-danger" type="submit">Delete workspace</button>
+        </form>
+    </section>
+<?php endif; ?>

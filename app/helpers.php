@@ -123,6 +123,59 @@ function csrf_field(): string
     return '<input type="hidden" name="_csrf" value="' . e(csrf_token()) . '">';
 }
 
+function show_back_button(): bool
+{
+    $path = current_path();
+    return !in_array($path, ['/', '/home'], true);
+}
+
+function back_fallback_url(): string
+{
+    $path = current_path();
+
+    if (preg_match('#^/items/(\d+)/edit$#', $path, $m)) {
+        return url('/items/' . $m[1]);
+    }
+    if (preg_match('#^/items/(\d+)$#', $path, $m)) {
+        $item = ItemService::find((int) $m[1]);
+        if ($item && !empty($item['workspace_id'])) {
+            $type = (string) ($item['type'] ?? '');
+            $module = match (true) {
+                in_array($type, ['document', 'folder'], true) => 'documents',
+                $type === 'file' => 'files',
+                in_array($type, ['image', 'audio', 'video'], true) => 'media',
+                $type === 'task' => 'tasks',
+                in_array($type, ['note', 'idea'], true) => 'notes',
+                $type === 'link' => 'links',
+                $type === 'account' => 'accounts',
+                default => '',
+            };
+            if ($module !== '') {
+                return url('/workspaces/' . (int) $item['workspace_id'] . '/' . $module);
+            }
+            return url('/workspaces/' . (int) $item['workspace_id']);
+        }
+        return url('/home');
+    }
+    if (preg_match('#^/workspaces/(\d+)/(documents|tasks|notes|files|media|links|accounts|archive)$#', $path, $m)) {
+        if (null_if_blank((string) input('folder', '')) !== null) {
+            return url('/workspaces/' . $m[1] . '/' . $m[2]);
+        }
+        return url('/workspaces/' . $m[1]);
+    }
+    if (preg_match('#^/workspaces/(\d+)/edit$#', $path, $m)) {
+        return url('/workspaces/' . $m[1]);
+    }
+    if (preg_match('#^/workspaces/(create)$#', $path) || $path === '/workspaces') {
+        return url('/home');
+    }
+    if (str_starts_with($path, '/settings')) {
+        return url('/home');
+    }
+
+    return url('/home');
+}
+
 function verify_csrf(?string $token = null): bool
 {
     $token = $token ?? ($_POST['_csrf'] ?? null);
@@ -133,16 +186,89 @@ function verify_csrf(?string $token = null): bool
 
 function require_csrf(): void
 {
-    if (!verify_csrf($_POST['_csrf'] ?? null)) {
-        http_response_code(419);
-        flash('error', 'Sesión desfasada. Recargá e intentá de nuevo.');
+    $wantsJson = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+        || (isset($_SERVER['HTTP_ACCEPT']) && str_contains((string) $_SERVER['HTTP_ACCEPT'], 'application/json'));
+
+    if (request_body_truncated()) {
+        http_response_code(413);
+        $max = format_ini_bytes(ini_get('post_max_size') ?: '8M');
+        $msg = 'El archivo supera el límite del servidor (~' . $max . ').';
+        if ($wantsJson) {
+            json_response(['ok' => false, 'error' => $msg], 413);
+        }
+        flash('error', $msg);
         redirect(Auth::check() ? '/home' : '/login');
     }
+    $token = $_POST['_csrf'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+    if (!verify_csrf(is_string($token) ? $token : null)) {
+        http_response_code(419);
+        $msg = 'Sesión desfasada. Recargá e intentá de nuevo.';
+        if ($wantsJson) {
+            json_response(['ok' => false, 'error' => $msg], 419);
+        }
+        flash('error', $msg);
+        redirect(Auth::check() ? '/home' : '/login');
+    }
+}
+
+function request_body_truncated(): bool
+{
+    $length = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+    if ($length <= 0) {
+        return false;
+    }
+    $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    if ($method !== 'POST' && $method !== 'PUT') {
+        return false;
+    }
+    $postMax = ini_bytes((string) (ini_get('post_max_size') ?: '8M'));
+    return $length > $postMax && empty($_POST) && empty($_FILES);
+}
+
+function ini_bytes(string $value): int
+{
+    $value = trim($value);
+    if ($value === '') {
+        return 0;
+    }
+    if (function_exists('ini_parse_quantity')) {
+        return (int) ini_parse_quantity($value);
+    }
+    if (!preg_match('/^(\d+)([KMG])?$/i', $value, $m)) {
+        return (int) $value;
+    }
+    $n = (int) $m[1];
+    return match (strtoupper($m[2] ?? '')) {
+        'G' => $n * 1024 * 1024 * 1024,
+        'M' => $n * 1024 * 1024,
+        'K' => $n * 1024,
+        default => $n,
+    };
+}
+
+function format_ini_bytes(string $value): string
+{
+    $bytes = ini_bytes($value);
+    if ($bytes >= 1024 * 1024) {
+        return (int) round($bytes / (1024 * 1024)) . ' MB';
+    }
+    if ($bytes >= 1024) {
+        return (int) round($bytes / 1024) . ' KB';
+    }
+    return $bytes . ' B';
 }
 
 function flash(string $type, string $message): void
 {
     $_SESSION['_flash'][] = ['type' => $type, 'message' => $message];
+}
+
+function json_response(array $data, int $status = 200): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 function take_flashes(): array
@@ -367,7 +493,6 @@ function item_type_icon(string $type): string
 function task_statuses(): array
 {
     return [
-        'inbox' => 'Inbox',
         'todo' => 'To do',
         'doing' => 'Doing',
         'blocked' => 'Blocked',
@@ -407,7 +532,7 @@ function status_badge_class(string $status): string
     return match ($status) {
         'active', 'done', 'completed' => 'badge-moss',
         'doing', 'todo' => 'badge-mustard',
-        'paused', 'inbox', 'blocked' => 'badge-blue',
+        'paused', 'blocked' => 'badge-blue',
         'cancelled', 'archived' => 'badge-ink',
         'urgent', 'high' => 'badge-terra',
         default => 'badge-ink',
@@ -496,6 +621,9 @@ function icon(string $name, int $size = 16): string
         'more' => '<circle cx="6" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="18" cy="12" r="1.4" fill="currentColor"/>',
         'check' => '<path d="m5.5 12.5 4 4 9-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
         'chevron' => '<path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+        'back' => '<path d="M15 6 9 12l6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 12h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+        'board' => '<path d="M5 4.5h4.5v15H5zM10.75 4.5h4.5v10h-4.5zM16.5 4.5H21v7h-4.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+        'metrics' => '<path d="M4.5 18.5V14M9.5 18.5V8M14.5 18.5v-6M19.5 18.5V5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4 19.5h16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
     ];
     $body = $icons[$name] ?? $icons['item'];
     return '<svg class="nk-icon" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" aria-hidden="true">' . $body . '</svg>';

@@ -137,6 +137,40 @@ final class WorkspaceService
         ActivityService::log('workspace.archived', 'Archived workspace "' . $row['name'] . '"', $id);
     }
 
+    public static function delete(int $id): void
+    {
+        $row = self::require($id);
+        $pdo = Database::pdo();
+        $uid = Auth::id();
+
+        $files = $pdo->prepare(
+            'SELECT id, stored_filename FROM items
+             WHERE user_id = :uid AND workspace_id = :wid AND stored_filename IS NOT NULL'
+        );
+        $files->execute(['uid' => $uid, 'wid' => $id]);
+        foreach ($files->fetchAll() ?: [] as $file) {
+            if (!empty($file['stored_filename'])) {
+                UploadService::delete('files', (string) $file['stored_filename']);
+            }
+        }
+
+        $soft = $pdo->prepare(
+            'UPDATE items SET deleted_at = NOW()
+             WHERE user_id = :uid AND workspace_id = :wid AND deleted_at IS NULL'
+        );
+        $soft->execute(['uid' => $uid, 'wid' => $id]);
+
+        $pdo->prepare(
+            'UPDATE activity_log SET workspace_id = NULL WHERE user_id = :uid AND workspace_id = :wid'
+        )->execute(['uid' => $uid, 'wid' => $id]);
+
+        $pdo->prepare(
+            'DELETE FROM workspaces WHERE id = :id AND user_id = :uid'
+        )->execute(['id' => $id, 'uid' => $uid]);
+
+        ActivityService::log('workspace.deleted', 'Deleted workspace "' . $row['name'] . '"');
+    }
+
     public static function counts(int $id): array
     {
         self::require($id);

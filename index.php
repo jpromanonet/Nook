@@ -28,10 +28,11 @@ $router->post('/onboarding/finish', [OnboardingController::class, 'finish']);
 $router->get('/today', [TodayController::class, 'index']);
 $router->post('/today', [TodayController::class, 'save']);
 
-$router->get('/inbox', [InboxController::class, 'index']);
-$router->post('/inbox/{id}/classify', [InboxController::class, 'classify']);
+$router->get('/board', [BoardController::class, 'index']);
+$router->post('/board/move', [BoardController::class, 'move']);
 
 $router->get('/calendar', [CalendarController::class, 'index']);
+$router->get('/metrics', [MetricsController::class, 'index']);
 $router->get('/search', [SearchController::class, 'index']);
 $router->get('/search.json', [SearchController::class, 'json']);
 $router->get('/favorites', [FavoritesController::class, 'index']);
@@ -57,6 +58,7 @@ $router->get('/workspaces/{id}', [WorkspaceController::class, 'show']);
 $router->get('/workspaces/{id}/edit', [WorkspaceController::class, 'edit']);
 $router->post('/workspaces/{id}', [WorkspaceController::class, 'update']);
 $router->post('/workspaces/{id}/archive', [WorkspaceController::class, 'archive']);
+$router->post('/workspaces/{id}/delete', [WorkspaceController::class, 'destroy']);
 $router->get('/workspaces/{id}/documents', [WorkspaceController::class, 'module']);
 $router->get('/workspaces/{id}/tasks', [WorkspaceController::class, 'module']);
 $router->get('/workspaces/{id}/notes', [WorkspaceController::class, 'module']);
@@ -66,8 +68,11 @@ $router->get('/workspaces/{id}/links', [WorkspaceController::class, 'module']);
 $router->get('/workspaces/{id}/accounts', [WorkspaceController::class, 'module']);
 $router->get('/workspaces/{id}/archive', [WorkspaceController::class, 'module']);
 
+$router->post('/uploads/chunk', [UploadController::class, 'chunk']);
 $router->get('/items/create', [ItemController::class, 'create']);
 $router->post('/items', [ItemController::class, 'store']);
+$router->post('/items/reorder', [ItemController::class, 'reorder']);
+$router->post('/items/move', [ItemController::class, 'move']);
 $router->get('/items/{id}', [ItemController::class, 'show']);
 $router->get('/items/{id}/edit', [ItemController::class, 'edit']);
 $router->post('/items/{id}', [ItemController::class, 'update']);

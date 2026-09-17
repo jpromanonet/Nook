@@ -11,17 +11,34 @@ $checklist = '';
 foreach ($meta['checklist'] ?? [] as $row) {
     $checklist .= (!empty($row['done']) ? '[x] ' : '') . ($row['text'] ?? '') . "\n";
 }
+$selectedWorkspace = $workspaceId ?? ($it['workspace_id'] ?? null);
+if ($selectedWorkspace === null && !$item && !empty($workspaces[0]['id'])) {
+    $selectedWorkspace = $workspaces[0]['id'];
+}
 ?>
 <div class="page-head">
     <div>
         <h1><?= $item ? 'Edit' : 'New' ?> <?= e(strtolower(item_type_label($type))) ?></h1>
     </div>
 </div>
-<form method="post" action="<?= e($action) ?>" enctype="multipart/form-data" class="card stack form-wide">
+<form
+    method="post"
+    action="<?= e($action) ?>"
+    enctype="multipart/form-data"
+    class="card stack form-wide"
+    data-chunk-upload="<?= e(url('/uploads/chunk')) ?>"
+>
     <?= csrf_field() ?>
     <input type="hidden" name="type" value="<?= e($type) ?>">
+    <input type="hidden" name="chunk_upload_id" value="" data-chunk-id>
     <?php if (!empty($parentId)): ?>
         <input type="hidden" name="parent_id" value="<?= e((string) $parentId) ?>">
+    <?php endif; ?>
+    <?php if ($type === 'folder'): ?>
+        <input type="hidden" name="scope" value="<?= e((string) ($folderScope ?? ($meta['scope'] ?? 'documents'))) ?>">
+    <?php endif; ?>
+    <?php if (!empty($returnTo)): ?>
+        <input type="hidden" name="return_to" value="<?= e((string) $returnTo) ?>">
     <?php endif; ?>
 
     <label class="field">
@@ -32,11 +49,14 @@ foreach ($meta['checklist'] ?? [] as $row) {
     <div class="form-grid">
         <label class="field">
             <span>Workspace</span>
-            <select name="workspace_id">
-                <option value="">Inbox</option>
-                <?php foreach ($workspaces as $ws): ?>
-                    <option value="<?= (int) $ws['id'] ?>" <?= (string) ($workspaceId ?? '') === (string) $ws['id'] ? 'selected' : '' ?>><?= e($ws['name']) ?></option>
-                <?php endforeach; ?>
+            <select name="workspace_id" required>
+                <?php if (!$workspaces): ?>
+                    <option value="">Create a workspace first</option>
+                <?php else: ?>
+                    <?php foreach ($workspaces as $ws): ?>
+                        <option value="<?= (int) $ws['id'] ?>" <?= (string) $selectedWorkspace === (string) $ws['id'] ? 'selected' : '' ?>><?= e($ws['name']) ?></option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </select>
         </label>
         <?php if ($type === 'task'): ?>

@@ -64,7 +64,7 @@ final class DailyService
         $due = ItemService::list([
             'type' => 'task',
             'due_on' => $today,
-            'order' => "FIELD(i.status,'doing','todo','blocked','inbox'), i.priority = 'urgent' DESC, i.title",
+            'order' => "FIELD(i.status,'doing','todo','blocked'), i.priority = 'urgent' DESC, i.title",
             'limit' => 30,
         ]);
         $overdue = ItemService::list([

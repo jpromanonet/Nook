@@ -19,18 +19,6 @@ if (Auth::check()) {
 }
 $userAvatar = Auth::check() ? avatar_url($user['avatar'] ?? null) : null;
 $userName = Auth::check() ? (string) ($user['name'] ?? '') : '';
-$inboxCount = 0;
-if (Auth::check()) {
-    try {
-        $st = Database::pdo()->prepare(
-            'SELECT COUNT(*) FROM items WHERE user_id = :uid AND workspace_id IS NULL AND deleted_at IS NULL AND archived_at IS NULL'
-        );
-        $st->execute(['uid' => Auth::id()]);
-        $inboxCount = (int) $st->fetchColumn();
-    } catch (Throwable $e) {
-        $inboxCount = 0;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="<?= e($htmlTheme) ?>" data-theme-pref="<?= e($themePref) ?>">
@@ -72,8 +60,9 @@ if (Auth::check()) {
         <nav class="sidebar-nav">
             <a class="<?= e(nav_active('/home', true) ?: nav_active('/', true)) ?>" href="<?= e(url('/home')) ?>"><?= icon('home') ?> Home</a>
             <a class="<?= e(nav_active('/today')) ?>" href="<?= e(url('/today')) ?>"><?= icon('today') ?> Today</a>
-            <a class="<?= e(nav_active('/inbox')) ?>" href="<?= e(url('/inbox')) ?>"><?= icon('inbox') ?> Inbox<?php if ($inboxCount): ?> <span class="count"><?= (int) $inboxCount ?></span><?php endif; ?></a>
+            <a class="<?= e(nav_active('/board')) ?>" href="<?= e(url('/board')) ?>"><?= icon('board') ?> Board</a>
             <a class="<?= e(nav_active('/calendar')) ?>" href="<?= e(url('/calendar')) ?>"><?= icon('calendar') ?> Calendar</a>
+            <a class="<?= e(nav_active('/metrics')) ?>" href="<?= e(url('/metrics')) ?>"><?= icon('metrics') ?> Metrics</a>
             <a class="<?= e(nav_active('/search')) ?>" href="<?= e(url('/search')) ?>"><?= icon('search') ?> Search</a>
             <a class="<?= e(nav_active('/favorites')) ?>" href="<?= e(url('/favorites')) ?>"><?= icon('star') ?> Favorites</a>
         </nav>
@@ -95,10 +84,9 @@ if (Auth::check()) {
             </nav>
         </div>
         <div class="sidebar-foot">
-            <a class="<?= e(nav_active('/settings')) ?>" href="<?= e(url('/settings/profile')) ?>"><?= icon('settings') ?> Settings</a>
             <form method="post" action="<?= e(url('/logout')) ?>">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn-ghost btn-block"><?= icon('logout', 14) ?> Sign out</button>
+                <button type="submit" class="btn btn-danger btn-block"><?= icon('logout', 14) ?> Sign out</button>
             </form>
         </div>
     </aside>
@@ -139,6 +127,15 @@ if (Auth::check()) {
         </header>
 
         <main class="content">
+            <?php if (show_back_button()): ?>
+                <div class="page-back-row">
+                    <a
+                        class="btn btn-ghost page-back"
+                        href="<?= e(back_fallback_url()) ?>"
+                        data-back
+                    ><?= icon('back', 16) ?> Back</a>
+                </div>
+            <?php endif; ?>
             <?php if ($flashes): ?>
                 <div class="flash-stack">
                     <?php foreach ($flashes as $flash): ?>
@@ -154,7 +151,7 @@ if (Auth::check()) {
 <nav class="mobile-nav">
     <a class="<?= e(nav_active('/home', true)) ?>" href="<?= e(url('/home')) ?>"><?= icon('home') ?><span>Home</span></a>
     <a class="<?= e(nav_active('/today')) ?>" href="<?= e(url('/today')) ?>"><?= icon('today') ?><span>Today</span></a>
-    <a class="<?= e(nav_active('/inbox')) ?>" href="<?= e(url('/inbox')) ?>"><?= icon('inbox') ?><span>Inbox</span></a>
+    <a class="<?= e(nav_active('/board')) ?>" href="<?= e(url('/board')) ?>"><?= icon('board') ?><span>Board</span></a>
     <a href="<?= e(url('/search')) ?>"><?= icon('search') ?><span>Search</span></a>
     <button type="button" data-open-quickadd><?= icon('plus') ?><span>Add</span></button>
 </nav>

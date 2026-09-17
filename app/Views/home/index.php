@@ -78,7 +78,7 @@ $events = count($today['events'] ?? []);
                             <span class="type-ico"><?= icon(item_type_icon($item['type']), 14) ?></span>
                             <span>
                                 <strong><?= e($item['title']) ?></strong>
-                                <span class="muted tiny"><?= e($item['workspace_name'] ?: 'Inbox') ?> · <?= e(relative_day($item['updated_at'])) ?></span>
+                                <span class="muted tiny"><?= e($item['workspace_name'] ?: '—') ?> · <?= e(relative_day($item['updated_at'])) ?></span>
                             </span>
                         </a>
                     </li>

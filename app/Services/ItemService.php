@@ -170,6 +170,8 @@ final class ItemService
         if ($workspaceId !== null) {
             WorkspaceService::require((int) $workspaceId);
             $workspaceId = (int) $workspaceId;
+        } else {
+            throw new InvalidArgumentException('Elegí un workspace.');
         }
 
         $parentId = null_if_blank($data['parent_id'] ?? null);
@@ -184,13 +186,23 @@ final class ItemService
         $status = self::normalizeStatus($type, (string) ($data['status'] ?? ''));
         $meta = self::metaFromInput($type, $data);
         $upload = null;
+        $maxUpload = (int) app_config('max_upload', 200 * 1024 * 1024);
         if ($file && !empty($file['name'])) {
             $upload = UploadService::store(
                 $file,
                 'files',
                 UploadService::fileMap(),
-                (int) app_config('max_upload', 200 * 1024 * 1024)
+                $maxUpload
             );
+        } elseif (!empty($data['chunk_upload_id'])) {
+            $upload = UploadService::assembleChunks(
+                (string) $data['chunk_upload_id'],
+                'files',
+                UploadService::fileMap(),
+                $maxUpload
+            );
+        }
+        if ($upload) {
             $mediaType = UploadService::itemTypeForMime($upload['mime']);
             if ($mediaType !== null) {
                 $type = $mediaType;
@@ -261,16 +273,28 @@ final class ItemService
         if ($workspaceId !== null) {
             WorkspaceService::require((int) $workspaceId);
             $workspaceId = (int) $workspaceId;
+        } else {
+            throw new InvalidArgumentException('Elegí un workspace.');
         }
 
         $upload = null;
+        $maxUpload = (int) app_config('max_upload', 200 * 1024 * 1024);
         if ($file && !empty($file['name'])) {
             $upload = UploadService::store(
                 $file,
                 'files',
                 UploadService::fileMap(),
-                (int) app_config('max_upload', 200 * 1024 * 1024)
+                $maxUpload
             );
+        } elseif (!empty($data['chunk_upload_id'])) {
+            $upload = UploadService::assembleChunks(
+                (string) $data['chunk_upload_id'],
+                'files',
+                UploadService::fileMap(),
+                $maxUpload
+            );
+        }
+        if ($upload) {
             if (!empty($item['stored_filename'])) {
                 UploadService::delete('files', (string) $item['stored_filename']);
             }
@@ -358,6 +382,46 @@ final class ItemService
         );
         $stmt->execute(['id' => $id, 'uid' => Auth::id()]);
         ActivityService::log('item.deleted', 'Deleted "' . $item['title'] . '"', $item['workspace_id'] ? (int) $item['workspace_id'] : null, $id);
+    }
+
+    public static function setStatus(int $id, string $status): void
+    {
+        $item = self::require($id);
+        if ($item['type'] !== 'task') {
+            throw new InvalidArgumentException('Solo las tareas tienen estado de tablero.');
+        }
+        $status = self::normalizeStatus('task', $status);
+        $stmt = Database::pdo()->prepare(
+            'UPDATE items SET status = :status WHERE id = :id AND user_id = :uid'
+        );
+        $stmt->execute(['status' => $status, 'id' => $id, 'uid' => Auth::id()]);
+    }
+
+    public static function moveTask(int $id, string $status, ?int $workspaceId): void
+    {
+        $item = self::require($id);
+        if ($item['type'] !== 'task') {
+            throw new InvalidArgumentException('Solo se pueden mover tareas.');
+        }
+        $status = self::normalizeStatus('task', $status);
+        if ($workspaceId !== null) {
+            WorkspaceService::require($workspaceId);
+        }
+        $stmt = Database::pdo()->prepare(
+            'UPDATE items SET status = :status, workspace_id = :wid WHERE id = :id AND user_id = :uid'
+        );
+        $stmt->execute([
+            'status' => $status,
+            'wid' => $workspaceId,
+            'id' => $id,
+            'uid' => Auth::id(),
+        ]);
+        ActivityService::log(
+            'item.moved',
+            'Moved task "' . $item['title'] . '"',
+            $workspaceId,
+            $id
+        );
     }
 
     public static function convert(int $id, string $toType): void
@@ -591,9 +655,12 @@ final class ItemService
     private static function normalizeStatus(string $type, string $status): string
     {
         if ($type === 'task') {
+            if ($status === 'inbox') {
+                return 'todo';
+            }
             return isset(task_statuses()[$status]) ? $status : 'todo';
         }
-        return in_array($status, ['active', 'archived', 'inbox'], true) ? $status : 'active';
+        return in_array($status, ['active', 'archived'], true) ? $status : 'active';
     }
 
     private static function normalizePriority(mixed $priority): ?string

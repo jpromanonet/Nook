@@ -16,7 +16,7 @@
                     <span class="type-ico"><?= icon(item_type_icon($item['type'])) ?></span>
                     <span>
                         <strong><?= e($item['title']) ?></strong>
-                        <span class="muted tiny"><?= e($item['workspace_name'] ?: 'Inbox') ?></span>
+                        <span class="muted tiny"><?= e($item['workspace_name'] ?: '—') ?></span>
                     </span>
                 </a>
             </li>

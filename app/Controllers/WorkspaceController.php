@@ -79,6 +79,20 @@ final class WorkspaceController
         redirect('/workspaces');
     }
 
+    public static function destroy(string $id): void
+    {
+        Auth::requireLogin();
+        require_csrf();
+        try {
+            WorkspaceService::delete((int) $id);
+            flash('success', 'Workspace deleted.');
+            redirect('/home');
+        } catch (Throwable $e) {
+            flash('error', $e->getMessage());
+            redirect('/workspaces/' . $id . '/edit');
+        }
+    }
+
     public static function module(string $id): void
     {
         Auth::requireLogin();
@@ -131,7 +145,7 @@ final class WorkspaceController
                 break;
             case 'tasks':
                 $filters['type'] = 'task';
-                $filters['order'] = "FIELD(i.status,'doing','todo','blocked','inbox','done','cancelled'), i.due_date";
+                $filters['order'] = "FIELD(i.status,'doing','todo','blocked','done','cancelled'), i.due_date";
                 $empty = [
                     'title' => 'No tasks here.',
                     'body' => 'Enjoy the quiet, or add something when you\'re ready.',

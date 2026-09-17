@@ -35,7 +35,7 @@ $statusClass = match ($workspace['status'] ?? '') {
         <?php endif; ?>
         <div class="ws-meta">
             <span><?= icon('task', 14) ?> <?= (int) ($counts['task'] ?? 0) ?> tasks</span>
-            <span><?= icon('doc', 14) ?> <?= (int) (($counts['document'] ?? 0) + ($counts['folder'] ?? 0)) ?> docs</span>
+            <span><?= icon('doc', 14) ?> <?= (int) ($counts['document'] ?? 0) ?> docs</span>
             <span><?= icon('note', 14) ?> <?= (int) (($counts['note'] ?? 0) + ($counts['idea'] ?? 0)) ?> notes</span>
             <span><?= icon('image', 14) ?> <?= (int) (($counts['image'] ?? 0) + ($counts['audio'] ?? 0) + ($counts['video'] ?? 0)) ?> media</span>
         </div>
@@ -53,7 +53,7 @@ $statusClass = match ($workspace['status'] ?? '') {
             <span><?= e($label) ?></span>
             <?php
             $countKey = match ($key) {
-                'documents' => (int) (($counts['document'] ?? 0) + ($counts['folder'] ?? 0)),
+                'documents' => (int) ($counts['document'] ?? 0),
                 'tasks' => (int) ($counts['task'] ?? 0),
                 'notes' => (int) (($counts['note'] ?? 0) + ($counts['idea'] ?? 0)),
                 'files' => (int) ($counts['file'] ?? 0),

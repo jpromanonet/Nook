@@ -1,0 +1,12 @@
+.env
+/config/secrets.php
+/storage/avatars/*
+/storage/files/*
+/storage/mail/*
+!/storage/avatars/.gitkeep
+!/storage/files/.gitkeep
+!/storage/mail/.gitkeep
+!/storage/**/.htaccess
+*.log
+Thumbs.db
+.DS_Store

@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'APP_NAME' => 'Nook',
+    'APP_ENV' => 'local',
+    'APP_DEBUG' => 'true',
+    'APP_URL' => 'http://192.168.100.50/nook',
+    'DB_HOST' => '127.0.0.1',
+    'DB_PORT' => '3306',
+    'DB_NAME' => 'nook',
+    'DB_USER' => 'root',
+    'DB_PASS' => '',
+    'MAIL_FROM' => 'nook@localhost',
+    'MAIL_FROM_NAME' => 'Nook',
+];
